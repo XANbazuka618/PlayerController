@@ -1,0 +1,103 @@
+using UnityEngine;
+
+public class PlayerController : MonoBehaviour
+{
+    public CharacterController controller;
+    public float speed = 12f;
+    public float runSpeed = 24f;
+    public float jumpHeight = 3.0f;
+    public float gravity = -9.81f;
+    public float maxStamina = 100f;
+    public float staminaDrainRate = 10f;
+    public float staminaRecoveryRate = 5f;
+    public float staminaRecoveryDelay = 3f;
+
+    private float currentStamina;
+    private float staminaRecoveryTimer;
+    private Vector3 velocity;
+    private bool isGrounded;
+    private float currentSpeed;
+
+    void Start()
+    {
+        currentStamina = maxStamina;
+        staminaRecoveryTimer = 0f;
+        currentSpeed = speed;
+    }
+
+    void Update()
+    {
+        HandleMovement();
+        HandleStamina();
+        HandleJump();
+        ApplyGravity();
+    }
+
+    private void HandleMovement()
+    {
+        isGrounded = controller.isGrounded;
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && currentStamina > 0 && isGrounded;
+        currentSpeed = isRunning ? runSpeed : speed;
+
+        Vector3 move = transform.right * x + transform.forward * z;
+        controller.Move(move * currentSpeed * Time.deltaTime);
+    }
+
+    private void HandleStamina()
+    {
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && currentStamina > 0 && isGrounded;
+
+        if (isRunning)
+        {
+            currentStamina -= staminaDrainRate * Time.deltaTime;
+            if (currentStamina < 0)
+            {
+                currentStamina = 0;
+                staminaRecoveryTimer = staminaRecoveryDelay;
+            }
+        }
+        else
+        {
+            if (staminaRecoveryTimer > 0)
+            {
+                staminaRecoveryTimer -= Time.deltaTime;
+            }
+            else
+            {
+                float recoveryRate = controller.velocity == Vector3.zero ? staminaRecoveryRate * 1.5f : staminaRecoveryRate;
+                currentStamina += recoveryRate * Time.deltaTime;
+                if (currentStamina > maxStamina)
+                {
+                    currentStamina = maxStamina;
+                }
+            }
+        }
+
+        if (currentStamina == 0 && isGrounded)
+        {
+            currentSpeed = speed;
+        }
+    }
+
+    private void HandleJump()
+    {
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+    }
+
+    private void ApplyGravity()
+    {
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+}
