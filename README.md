@@ -28,7 +28,8 @@ isGrounded: Флаг, указывающий, находится ли персо
 
 currentSpeed: Текущая скорость персонажа.
 
-МЕТОДЫ:
+В CharacterController
+МЕТОДЫ: 
 Start():устанавливаются начальные значения переменных currentStamina, staminaRecoveryTimer и currentSpeed.
 
 Update():вызываются функции для обработки движения, выносливости, прыжков и применения гравитации.
