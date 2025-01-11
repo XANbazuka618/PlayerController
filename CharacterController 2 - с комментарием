@@ -20,11 +20,6 @@ public class PlayerterController : MonoBehaviour
     private bool isGrounded; // Флаг, указывающий, находится ли персонаж на земле
     private float currentSpeed; // Текущая скорость
 
-    void Awake()
-    {
-        // Метод Awake вызывается при инициализации скрипта
-    }
-
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked; // Блокируем курсор в центре экрана
