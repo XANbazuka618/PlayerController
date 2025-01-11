@@ -1,0 +1,96 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class PlayerC : MonoBehaviour
+{
+    public CharacterController controller; // Компонент CharacterController для управления движением
+    public float speed = 12f; // Скорость движения
+    public float runSpeed = 24f; // Скорость бега
+    public float jumpHeight = 3.0f; // Высота прыжка
+    public float gravity = -9.81f; // Гравитация
+    public float maxStamina = 100f; // Максимальная выносливость
+    public float staminaDrainRate = 10f; // Скорость расхода выносливости при беге
+    public float staminaRecoveryRate = 5f; // Скорость восстановления выносливости
+    public float staminaRecoveryDelay = 3f; // Задержка восстановления выносливости после её истощения
+
+    private float currentStamina; // Текущая выносливость
+    private float staminaRecoveryTimer; // Таймер задержки восстановления выносливости
+    private Vector3 velocity; // Вектор скорости
+    private bool isGrounded; // Флаг, указывающий, находится ли персонаж на земле
+    private float currentSpeed; // Текущая скорость
+
+    void Awake()
+    {
+        // Метод Awake вызывается при инициализации скрипта
+    }
+
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked; // Блокируем курсор в центре экрана
+        Cursor.visible = false; // Скрываем курсор
+        currentStamina = maxStamina; // Устанавливаем текущую выносливость на максимум
+        staminaRecoveryTimer = 0f; // Инициализируем таймер задержки восстановления
+        currentSpeed = speed; // Устанавливаем начальную скорость
+    }
+
+    void Update()
+    {
+        isGrounded = controller.isGrounded; // Проверяем, находится ли персонаж на земле
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f; // Устанавливаем небольшую отрицательную скорость, чтобы персонаж оставался на земле
+        }
+
+        float x = Input.GetAxis("Horizontal"); // Получаем значение оси "Horizontal" для движения влево/вправо
+        float z = Input.GetAxis("Vertical"); // Получаем значение оси "Vertical" для движения вперед/назад
+
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && currentStamina > 0 && isGrounded; // Проверяем, зажата ли клавиша Shift, есть ли выносливость для бега и находится ли персонаж на земле
+        if (isGrounded)
+        {
+            currentSpeed = isRunning ? runSpeed : speed; // Устанавливаем текущую скорость в зависимости от состояния бега
+        }
+
+        Vector3 move = transform.right * x + transform.forward * z; // Рассчитываем вектор движения
+        controller.Move(move * currentSpeed * Time.deltaTime); // Двигаем персонажа
+
+        if (isRunning)
+        {
+            currentStamina -= staminaDrainRate * Time.deltaTime; // Уменьшаем выносливость при беге
+            if (currentStamina < 0)
+            {
+                currentStamina = 0; // Не допускаем отрицательной выносливости
+                staminaRecoveryTimer = staminaRecoveryDelay; // Устанавливаем таймер задержки восстановления
+            }
+        }
+        else
+        {
+            if (staminaRecoveryTimer > 0)
+            {
+                staminaRecoveryTimer -= Time.deltaTime; // Уменьшаем таймер задержки восстановления
+            }
+            else
+            {
+                float recoveryRate = move == Vector3.zero ? staminaRecoveryRate * 1.5f : staminaRecoveryRate; // Восстанавливаем выносливость быстрее, если персонаж не двигается
+                currentStamina += recoveryRate * Time.deltaTime; // Восстанавливаем выносливость
+                if (currentStamina > maxStamina)
+                {
+                    currentStamina = maxStamina; // Не допускаем превышения максимальной выносливости
+                }
+            }
+        }
+
+        if (currentStamina == 0 && isGrounded)
+        {
+            currentSpeed = speed; // Устанавливаем скорость на обычную, если выносливость закончилась и персонаж на земле
+        }
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity); // Рассчитываем скорость прыжка
+        }
+
+        velocity.y += gravity * Time.deltaTime; // Применяем гравитацию к скорости
+        controller.Move(velocity * Time.deltaTime); // Двигаем персонажа с учетом гравитации
+    }
+}
