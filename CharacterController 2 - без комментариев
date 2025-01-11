@@ -20,10 +20,6 @@ public class PlayerterController : MonoBehaviour
     private bool isGrounded;
     private float currentSpeed;
 
-    void Awake()
-    {
-    }
-
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
